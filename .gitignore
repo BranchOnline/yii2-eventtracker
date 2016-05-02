@@ -5,4 +5,4 @@
 phpunit.xml
 
 # Coverage dir for tests
-/tests/converage
+/tests/coverage

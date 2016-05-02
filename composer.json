@@ -1,0 +1,25 @@
+{
+  "name": "branchonline/yii2-eventtracker",
+  "type": "yii2-extension",
+  "description": "Extends Yii2 framework with some event and state tracking classes.",
+  "keywords": ["yii2", "tracking", "logging", "events", "state"],
+  "license": "BSD-3-Clause",
+  "authors": [
+    {
+      "name": "Roelof Ruis",
+      "email": "roelof@branchonline.nl"
+    }
+  ],
+  "require": {
+    "php": ">=5.4",
+    "yiisoft/yii2": "*"
+  },
+  "require-dev": {
+    "phpunit/phpunit": "3.7.*"
+  },
+  "autoload": {
+    "psr-4": {
+      "branchonline\\eventtracker\\": "src/"
+    }
+  }
+}

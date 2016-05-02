@@ -16,6 +16,8 @@ Add
 "branchonline/yii2-eventtracker": "dev-master"
 ```
 
+to your composer.json
+
 Usage
 -----
 

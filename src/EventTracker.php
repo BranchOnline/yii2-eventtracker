@@ -8,6 +8,7 @@ use yii\base\InvalidConfigException;
 use yii\db\Connection;
 use Yii;
 use yii\base\InvalidParamException;
+use yii\db\IntegrityException;
 use yii\db\Query;
 use yii\di\Instance;
 
@@ -121,6 +122,7 @@ class EventTracker extends Component {
      * @throws InvalidParamException Whenever the event data could not be encoded into JSON format or event_type is not
      * a valid event ID.
      * @throws Exception Whenever no user_id is given and there is no authenticated or existing user.
+     * @throws IntegrityException Whenever the event could not be inserted into the database.
      */
     public function logEvent($event_type, $event_data = null, $user_id = null) {
         if (null !== $event_data) {
@@ -135,7 +137,7 @@ class EventTracker extends Component {
         }
 
         $params = [
-            'timestamp'  => (int) round(microtime(true) * 10000),
+            'timestamp'  => $this->_trackerTime(),
             'event_data' => $event_data,
             'event_type' => $event_type,
         ];
@@ -169,6 +171,7 @@ class EventTracker extends Component {
      * @throws InvalidParamException Whenever the state value could not be encoded into JSON format or $state_key is not
      * a valid state key ID.
      * @throws Exception Whenever no user_id is given and there is no authenticated or existing user.
+     * @throws IntegrityException Whenever the event could not be inserted into the database.
      */
     public function logState($state_key, $state_value, $user_id = null) {
         $state_value = json_encode($state_value);
@@ -181,7 +184,7 @@ class EventTracker extends Component {
         }
 
         $params = [
-            'timestamp'   => (int) round(microtime(true) * 10000),
+            'timestamp'   => $this->_trackerTime(),
             'state_key'   => $state_key,
             'state_value' => $state_value,
         ];
@@ -196,7 +199,7 @@ class EventTracker extends Component {
             $params['user_id'] = $user->id;
         }
 
-        $this->db->createCommand()->insert($this->state_table, $params)->execute();
+        return $this->db->createCommand()->insert($this->state_table, $params)->execute();
     }
 
     /**
@@ -220,8 +223,8 @@ class EventTracker extends Component {
             ->andFilterWhere(['in', 'event_type', $event_types]);
 
         $query->addParams([
-            ':low' => (int) $start . '0000',  // Add microsecond zeros.
-            ':high' => (int) $until . '0000', // Add microsecond zeros.
+            ':low'  => $this->_formatTrackerTime($start),
+            ':high' => $this->_formatTrackerTime($until),
         ]);
         return $query;
     }
@@ -245,7 +248,7 @@ class EventTracker extends Component {
             ->orderBy(['state_key' => SORT_ASC, 'timestamp' => SORT_DESC]);
 
         $query->addParams([
-            ':time' => (int) $time . '0000', // Add microsecond zeros.
+            ':time' => $this->_formatTrackerTime($time),
         ]);
 
         $available_keys = [];
@@ -261,6 +264,25 @@ class EventTracker extends Component {
             ->andFilterWhere(['in', 'keys.column1', $state_keys])
             ->indexBy('state_key');
         return $outer_query;
+    }
+
+    /**
+     * Formats a UNIX timestamp so it has the correct number of trailing zeros to be used in a query.
+     *
+     * @param integer $time The timestamp to be formatted.
+     * @return integer The formatted time.
+     */
+    private function _formatTrackerTime($time) {
+        return (int) $time . '0000';
+    }
+
+    /**
+     * Microtime in the format used by the tracker.
+     *
+     * @return integer The microtime precision as integer.
+     */
+    private function _trackerTime() {
+        return (int) round(microtime(true) * 10000);
     }
 
 }

@@ -1,6 +1,11 @@
 Yii2 Eventtracker
 =================
 
+[![Latest Stable Version](https://poser.pugx.org/branchonline/yii2-eventtracker/v/stable)](https://packagist.org/packages/branchonline/yii2-eventtracker)
+[![Total Downloads](https://poser.pugx.org/branchonline/yii2-eventtracker/downloads)](https://packagist.org/packages/branchonline/yii2-eventtracker)
+[![Latest Unstable Version](https://poser.pugx.org/branchonline/yii2-eventtracker/v/unstable)](https://packagist.org/packages/branchonline/yii2-eventtracker)
+[![License](https://poser.pugx.org/branchonline/yii2-eventtracker/license)](https://packagist.org/packages/branchonline/yii2-eventtracker)
+
 For now, this package requires you to use yii2 with a **Postgres** database!
 
 The eventtracker package can be used when wanting to keep track of events (happening at a point in time) and state (persisting for some period) information without remodelling your database.

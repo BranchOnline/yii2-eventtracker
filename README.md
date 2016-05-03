@@ -48,8 +48,18 @@ Examples
 
 ```php
 // Log that MY_EVENT happened for the current user with the optional data.
-Yii::$app->eventtracker->logEvent(EventTypes::MY_EVENT, ['optional' => "Json encoded data"]);
+Yii::$app->eventtracker->logEvent(EventTypes::MY_EVENT, ['optional' => "data"]);
 
 // Log that the state of MY_KEY changed to ['x' => 100].
 Yii::$app->eventtracker->logState(StateKeys::MY_KEY, ['x' => 100]);
+```
+
+###### Retrieve events or state
+
+```php
+// Get the events between 1 jan 2016 and 1 feb 2016 for user 1 and 2 of type MY_EVENT_1 or MY_EVENT_2.
+Yii::$app->eventtracker->eventsBetween(1451606400, 1454284800, [1, 2], [EventTypes::MY_EVENT_1, EventTypes::MY_EVENT_2])
+
+// Get the state of MY_KEY_1 and MY_KEY_2 at 1 jan 2016.
+Yii::$app->eventtracker->stateAt(1451606400, [StateKeys::MY_KEY_1, StateKeys::MY_KEY_2]);
 ```

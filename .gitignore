@@ -1,2 +1,8 @@
 #composer vendor dir
 /vendor
+
+# Non distributed phpunit config
+phpunit.xml
+
+# Coverage dir for tests
+/tests/coverage

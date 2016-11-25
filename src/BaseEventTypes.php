@@ -17,7 +17,7 @@ use yii\base\Object;
  * @author Roelof Ruis <roelof@branchonline.nl>
  * @copyright Copyright (c) 2016, Branch Online
  * @package branchonline\eventtracker
- * @version 1.0
+ * @version 1.1
  */
 abstract class BaseEventTypes extends Object {
 

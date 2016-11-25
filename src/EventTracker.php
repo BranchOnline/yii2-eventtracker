@@ -19,7 +19,7 @@ use yii\di\Instance;
  * @author Roelof Ruis <roelof@branchonline.nl>
  * @copyright Copyright (c) 2016, Branch Online
  * @package branchonline\eventtracker
- * @version 1.0
+ * @version 1.1
  */
 class EventTracker extends Component {
 

@@ -31,12 +31,12 @@ class EventTrackerTest extends \PHPUnit_Framework_TestCase {
     }
 
     public function testInstantiateTrackerWithoutArgs() {
-        $this->setExpectedException('yii\base\InvalidConfigException');
+        $this->ExpectException('yii\base\InvalidConfigException');
         new EventTracker();
     }
 
     public function testInstantiateTrackerWithWrongClasses() {
-        $this->setExpectedException('yii\base\InvalidConfigException');
+        $this->ExpectException('yii\base\InvalidConfigException');
         new EventTracker([
             'types_config' => 'yii\base\Object',
             'keys_config' => 'yii\base\Object',
@@ -44,7 +44,7 @@ class EventTrackerTest extends \PHPUnit_Framework_TestCase {
     }
 
     public function testInstantiateTrackerWithOneWrongClass() {
-        $this->setExpectedException('yii\base\InvalidConfigException');
+        $this->ExpectException('yii\base\InvalidConfigException');
         new EventTracker([
             'types_config' => 'branchonline\eventtracker\tests\unit\MockEventTypes',
             'keys_config'  => 'yii\base\Object',

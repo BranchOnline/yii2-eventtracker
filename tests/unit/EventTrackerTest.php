@@ -5,7 +5,10 @@ namespace branchonline\eventtracker\tests\unit;
 use branchonline\eventtracker\EventTracker;
 use branchonline\eventtracker\BaseEventTypes;
 use branchonline\eventtracker\BaseStateKeys;
+use branchonline\eventtracker\EventTrackerEvent;
+use branchonline\eventtracker\PostEventInterface;
 use Yii;
+use yii\db\Connection;
 
 /**
  * Tests the EventTracker class.
@@ -20,6 +23,14 @@ class EventTrackerTest extends \PHPUnit_Framework_TestCase {
             'id' => 'eventtracker-test',
             'basePath' => __DIR__,
         ];
+        $config['components']['db'] = [
+            'class'       => 'yii\db\Connection',
+            'dsn'         => 'pgsql:host=localhost;port=5432;dbname=eventtracker_dev',
+            'username'    => 'homerun_dev',
+            'password'    => 'H0M3run',
+            'tablePrefix' => 'tbl_',
+            'charset'     => 'utf8',
+        ];
         $config['components']['cache'] = 'yii\caching\DummyCache';
         $config['vendorPath'] = dirname(dirname(__DIR__)) . '/vendor';
         new \yii\console\Application($config);
@@ -31,12 +42,14 @@ class EventTrackerTest extends \PHPUnit_Framework_TestCase {
     }
 
     public function testInstantiateTrackerWithoutArgs() {
-        $this->setExpectedException('yii\base\InvalidConfigException');
+        $this->expectException('yii\base\InvalidConfigException');
+        $this->expectExceptionMessage('Both $types_config and $keys_config should be set for the EventTracker');
         new EventTracker();
     }
 
     public function testInstantiateTrackerWithWrongClasses() {
-        $this->setExpectedException('yii\base\InvalidConfigException');
+        $this->expectException('yii\base\InvalidConfigException');
+        $this->expectExceptionMessage('$types_config should indicate a class subclassing BaseEventTypes to specify the event types.');
         new EventTracker([
             'types_config' => 'yii\base\Object',
             'keys_config' => 'yii\base\Object',
@@ -44,16 +57,30 @@ class EventTrackerTest extends \PHPUnit_Framework_TestCase {
     }
 
     public function testInstantiateTrackerWithOneWrongClass() {
-        $this->setExpectedException('yii\base\InvalidConfigException');
+        $this->expectException('yii\base\InvalidConfigException');
+        $this->expectExceptionMessage('$keys_config should indicate a class subclassing BaseStateKeys to specify the state keys.');
         new EventTracker([
             'types_config' => 'branchonline\eventtracker\tests\unit\MockEventTypes',
             'keys_config'  => 'yii\base\Object',
         ]);
     }
 
+    public function testInstantiateTrackerWithWrongHandler() {
+        $this->expectException('yii\base\InvalidConfigException');
+        $this->expectExceptionMessage('$post_event_handler should indicate a class implementing the PostEventInterface');
+        new EventTracker([
+            'types_config'       => 'branchonline\eventtracker\tests\unit\MockEventTypes',
+            'keys_config'        => 'branchonline\eventtracker\tests\unit\MockStateKeys',
+            'db'                 => 'yii\db\Connection',
+            'post_event_handler' => 'yii\base\Object',
+        ]);
+    }
+
     public function testInstantiateTracker() {
         $tracker = $this->_buildFunctioningTracker();
         $this->assertInstanceOf('branchonline\eventtracker\EventTracker', $tracker);
+        $this->assertTrue(EventTrackerEvent::$db instanceof Connection, 'Late static binding of $db in EventTrackerEvent failed.');
+        $this->assertSame('tracking.{{%event}}', EventTrackerEvent::$table, 'Late static binding of $table in EventTrackerEvent failed.');
     }
 
     public function testEventTypesAvailable() {
@@ -80,7 +107,7 @@ class EventTrackerTest extends \PHPUnit_Framework_TestCase {
      * @dataProvider providerLogIllegalTypeEvents
      */
     public function testLogIllegalTypeEvents($event_type, $event_data, $user_id, $err_message) {
-        $tracker = $this->_buildFunctioningTracker();
+        $tracker = $this->_buildFunctioningTracker(false);
         $message = null;
         try {
             $tracker->logEvent($event_type, $event_data, $user_id);
@@ -106,7 +133,20 @@ class EventTrackerTest extends \PHPUnit_Framework_TestCase {
      * @dataProvider providerLogLegalTypeEvents
      */
     public function testLogLegalTypeEvents($event_type, $event_data, $user_id) {
-        $tracker = $this->_buildFunctioningTracker();
+        $tracker = $this->_buildFunctioningTracker(false);
+        EventTrackerEvent::deleteAll([]);
+        $tracker->logEvent($event_type, $event_data, $user_id);
+        $logged_event = EventTrackerEvent::findOne([
+            'event_type' => $event_type,
+            'user_id' => $user_id
+        ]);
+        $this->assertTrue($logged_event instanceof EventTrackerEvent);
+        $this->assertSame($event_data, json_decode($logged_event->event_data, true));
+    }
+
+    /** @dataProvider providerLogLegalStateKeys */
+    public function testTriggerPostEvent($event_type, $event_data, $user_id) {
+        $tracker = $this->_buildFunctioningTrackerWithPostEventHandler();
         $tracker->logEvent($event_type, $event_data, $user_id);
     }
 
@@ -143,9 +183,7 @@ class EventTrackerTest extends \PHPUnit_Framework_TestCase {
         ];
     }
 
-    /**
-     * @dataProvider providerLogLegalStateKeys
-     */
+    /** @dataProvider providerLogLegalStateKeys */
     public function testLogLegalStateKeys($state_key, $state_value, $user_id) {
         $tracker = $this->_buildFunctioningTracker();
         $tracker->logState($state_key, $state_value, $user_id);
@@ -170,20 +208,55 @@ class EventTrackerTest extends \PHPUnit_Framework_TestCase {
         $this->assertInstanceOf('yii\db\Query', $query);
     }
 
-    private function _buildFunctioningTracker() {
-        $mock_connection = $this->getMockBuilder('yii\db\Connection')->getMock();
-        $mock_command    = $this->getMockBuilder('yii\db\Command')->getMock();
-        $mock_command->expects($this->any())
-            ->method('insert')
-            ->will($this->returnValue($mock_command));
-        $mock_connection->expects($this->any())
-            ->method('createCommand')
-            ->will($this->returnValue($mock_command));
+    private function _buildFunctioningTracker($mock_connection = true) {
+        if ($mock_connection) {
+            $mock_connection = $this->getMockBuilder('yii\db\Connection')->getMock();
+            $mock_command    = $this->getMockBuilder('yii\db\Command')->getMock();
+            $mock_command->expects($this->any())
+                ->method('insert')
+                ->will($this->returnValue($mock_command));
+            $mock_connection->expects($this->any())
+                ->method('createCommand')
+                ->will($this->returnValue($mock_command));
+            return new EventTracker([
+                'types_config' => 'branchonline\eventtracker\tests\unit\MockEventTypes',
+                'keys_config'  => 'branchonline\eventtracker\tests\unit\MockStateKeys',
+                'db'           => $mock_connection,
+            ]);
+        } else {
+            return new EventTracker([
+                'types_config' => 'branchonline\eventtracker\tests\unit\MockEventTypes',
+                'keys_config'  => 'branchonline\eventtracker\tests\unit\MockStateKeys',
+            ]);
+        }
+    }
+
+    private function _buildFunctioningTrackerWithPostEventHandler() {
+        $injected_handler = $this->getMockBuilder('branchonline\eventtracker\tests\unit\DummyHandler')->getMock();
+        $injected_handler->expects($this->once())
+            ->method('afterLogEvent')
+            ->will($this->returnValue(null));
         return new EventTracker([
-            'types_config' => 'branchonline\eventtracker\tests\unit\MockEventTypes',
-            'keys_config'  => 'branchonline\eventtracker\tests\unit\MockStateKeys',
-            'db'           => $mock_connection,
+            'types_config'       => 'branchonline\eventtracker\tests\unit\MockEventTypes',
+            'keys_config'        => 'branchonline\eventtracker\tests\unit\MockStateKeys',
+            'post_event_handler' => [
+                // A trick to make sure the call can be checked through mocking. The class cannot be an object, but the
+                // mocked object can be inserted as an argument.
+                'class'            => 'branchonline\eventtracker\tests\unit\DummyHandler',
+                'injected_handler' => $injected_handler
+            ],
         ]);
+    }
+
+}
+
+// Using a mock class implementing the PostEventInterface.
+class DummyHandler implements PostEventInterface {
+
+    public $injected_handler;
+
+    public function afterLogEvent(EventTrackerEvent $event) {
+        $this->injected_handler->afterLogEvent($event); // Passing the call on to the mocked class.
     }
 
 }

@@ -19,7 +19,7 @@ use yii\di\Instance;
  * @author Roelof Ruis <roelof@branchonline.nl>
  * @copyright Copyright (c) 2016, Branch Online
  * @package branchonline\eventtracker
- * @version 1.0
+ * @version 1.1
  */
 class EventTracker extends Component {
 
@@ -59,11 +59,25 @@ class EventTracker extends Component {
      */
     public $db = 'db';
 
+    /**
+     * A configuration array specifying which class to use as the post event handler, or a string directly specifying
+     * the class. This class should implement the [[PostEventInterface]].
+     *
+     * @var mixed The post event handler configuration.
+     */
+    public $post_event_handler;
+
     /** @var BaseEventTypes Internally holds the event types instance. */
     private $_event_types;
 
     /** @var BaseStateKeys Internally holds the state keys instance. */
     private $_state_keys;
+
+    /**
+     * @var PostEventInterface|null Internally holds the post event handler instance, or null if no extra handling
+     * is required.
+     */
+    private $_post_event_handler;
 
     /**
      * Initializes a new event tracker object.
@@ -77,7 +91,7 @@ class EventTracker extends Component {
         }
         $event_types_instance = Yii::createObject($this->types_config);
         if (!$event_types_instance instanceof BaseEventTypes) {
-            throw new InvalidConfigException('$types_config should indicate a class subclassing BaseEventType to specify the event types.');
+            throw new InvalidConfigException('$types_config should indicate a class subclassing BaseEventTypes to specify the event types.');
         }
         $state_keys_instance = Yii::createObject($this->keys_config);
         if (!$state_keys_instance instanceof BaseStateKeys) {
@@ -86,6 +100,15 @@ class EventTracker extends Component {
         $this->_state_keys  = $state_keys_instance;
         $this->_event_types = $event_types_instance;
         $this->db = Instance::ensure($this->db, Connection::className());
+        if (null !== $this->post_event_handler){
+            $handler = Yii::createObject($this->post_event_handler);
+            if (!$handler instanceof PostEventInterface) {
+                throw new InvalidConfigException('$post_event_handler should indicate a class implementing the PostEventInterface.');
+            }
+            $this->_post_event_handler = $handler;
+        }
+        EventTrackerEvent::$db    = $this->db;
+        EventTrackerEvent::$table = $this->event_table;
     }
 
     /**
@@ -136,23 +159,30 @@ class EventTracker extends Component {
             throw new InvalidParamException('The event type ID is invalid.');
         }
 
-        $params = [
+        $event = new EventTrackerEvent([
             'timestamp'  => $this->_trackerTime(),
             'event_data' => $event_data,
             'event_type' => $event_type,
-        ];
+        ]);
 
         if (null !== $user_id && is_integer($user_id)) {
-            $params['user_id'] = $user_id;
+            $event->user_id = $user_id;
         } else {
             $user = Yii::$app->get('user', false);
             if (null === $user || $user->isGuest) {
                 throw new Exception('Cannot log event for non-existing or non-authenticated user.');
             }
-            $params['user_id'] = $user->id;
+            $event->user_id = $user->id;
         }
 
-        return $this->db->createCommand()->insert($this->event_table, $params)->execute();
+        if ($event->save()) {
+            if ($this->_post_event_handler instanceof PostEventInterface) {
+                $this->_post_event_handler->afterLogEvent($event);
+            }
+            return true;
+        } else {
+            return false;
+        }
     }
 
     /**

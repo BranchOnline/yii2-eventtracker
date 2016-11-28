@@ -12,13 +12,15 @@ The eventtracker package can be used when wanting to keep track of events (happe
 
 Keep track of events and state information via an application component.
 
+The eventtracker allows extension of tracker functionality by hooking your own additional classes into the core functionality.
+
 Installation
 ------------
 
 Add
 
 ```json
-"branchonline/yii2-eventtracker": "dev-master"
+"branchonline/yii2-eventtracker": "1.2"
 ```
 
 to your composer.json
@@ -36,7 +38,7 @@ Add
 
 ```php
 'eventtracker' => [
-    'class' => 'branchonline\eventtracker\EventTracker',
+    'class'        => 'branchonline\eventtracker\EventTracker',
     'types_config' => '', // Class extending EventTypes
     'keys_config'  => '', // Class extending StateKeys
 ]
@@ -44,7 +46,17 @@ Add
 
 To your application config.
 
-Now You can log your events and state by using the application component!
+If you want to add additional processing of events after they are handled, create a class that implements `PostEventInterface` and hook it into the configuration like so
+```php
+'eventtracker' => [
+    'class'              => 'branchonline\eventtracker\EventTracker',
+    'types_config'       => '', // Class extending EventTypes
+    'keys_config'        => '', // Class extending StateKeys
+    'post_event_handler' => '' // Your handler class, implementing the PostEventInterface
+]
+```
+
+Now You can log your events and state by using the application component and do optional post-processing!
 
 Examples
 --------

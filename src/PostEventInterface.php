@@ -11,7 +11,7 @@ namespace branchonline\eventtracker;
  * @author Roelof Ruis <roelof@branchonline.nl>
  * @copyright Copyright (c) 2016, Branch Online
  * @package branchonline\eventtracker
- * @version 1.1
+ * @version 1.2
  */
 interface PostEventInterface {
 

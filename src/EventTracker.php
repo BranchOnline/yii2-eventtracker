@@ -19,7 +19,7 @@ use yii\di\Instance;
  * @author Roelof Ruis <roelof@branchonline.nl>
  * @copyright Copyright (c) 2016, Branch Online
  * @package branchonline\eventtracker
- * @version 1.1
+ * @version 1.2
  */
 class EventTracker extends Component {
 
@@ -117,7 +117,7 @@ class EventTracker extends Component {
      *
      * @return array An associative array with the available event types.
      */
-    public function eventTypesAvailable() {
+    public function eventTypesAvailable(): array {
         return $this->_event_types->types();
     }
 
@@ -127,7 +127,7 @@ class EventTracker extends Component {
      *
      * @return array An associative array with the available state keys.
      */
-    public function stateKeysAvailable() {
+    public function stateKeysAvailable(): array {
         return $this->_state_keys->keys();
     }
 
@@ -138,21 +138,21 @@ class EventTracker extends Component {
      * If you have handlers that hook into the logging process, you can explicitly enable/disable these handlers by
      * using the $run_handlers parameter of this function.
      *
-     * @param integer      $event_type   The event type specified by its ID. It is recommended to set this using a class
+     * @param integer  $event_type   The event type specified by its ID. It is recommended to set this using a class
      * constant from your EventTypes object.
-     * @param mixed        $event_data   Any event data that should be added and can be encoded into JSON format. Can be
+     * @param mixed    $event_data   Any event data that should be added and can be encoded into JSON format. Can be
      * NULL in which case no data will be added.
-     * @param integer|null $user_id      Optionally specify a user for which to log the event. If NULL the currently
+     * @param int|null $user_id      Optionally specify a user for which to log the event. If NULL the currently
      * logged in user will be used.
-     * @param boolean      $run_handlers Optionally specify whether or not to run post event handlers (If any are
+     * @param bool     $run_handlers Optionally specify whether or not to run post event handlers (If any are
      * configured). Defaults to TRUE.
-     * @return boolean Whether the event was successfully logged.
+     * @return bool Whether the event was successfully logged.
      * @throws InvalidParamException Whenever the event data could not be encoded into JSON format or event_type is not
      * a valid event ID.
      * @throws Exception Whenever no user_id is given and there is no authenticated or existing user.
      * @throws IntegrityException Whenever the event could not be inserted into the database.
      */
-    public function logEvent($event_type, $event_data = null, $user_id = null, $run_handlers = true) {
+    public function logEvent($event_type, $event_data = null, $user_id = null, bool $run_handlers = true): bool {
         if (null !== $event_data) {
             $event_data = json_encode($event_data);
             if (false === $event_data) {
@@ -202,13 +202,13 @@ class EventTracker extends Component {
      * @param mixed        $state_value Any data that specifies the current state of the value for the given key.
      * @param integer|null $user_id     Optionally specify a user for which to log the state change. If NULL the
      * currently logged in user will be used.
-     * @return boolean Whether the state change was successfully logged.
+     * @return bool Whether the state change was successfully logged.
      * @throws InvalidParamException Whenever the state value could not be encoded into JSON format or $state_key is not
      * a valid state key ID.
      * @throws Exception Whenever no user_id is given and there is no authenticated or existing user.
      * @throws IntegrityException Whenever the event could not be inserted into the database.
      */
-    public function logState($state_key, $state_value, $user_id = null) {
+    public function logState($state_key, $state_value, $user_id = null): bool {
         $state_value = json_encode($state_value);
         if (false === $state_value) {
             throw new InvalidParamException('The state value could not be encoded into JSON format.');
@@ -234,7 +234,7 @@ class EventTracker extends Component {
             $params['user_id'] = $user->id;
         }
 
-        return $this->db->createCommand()->insert($this->state_table, $params)->execute();
+        return ($this->db->createCommand()->insert($this->state_table, $params)->execute() > 0);
     }
 
     /**
@@ -247,9 +247,9 @@ class EventTracker extends Component {
      * @param integer $until       The ending integer as a UNIX timestamp.
      * @param array   $users       Optionally filter the query to only contain events for selected users.
      * @param array   $event_types Optionally filter the query to only contain selected event types.
-     * @return yii/db/Query The query.
+     * @return Query The query.
      */
-    public function eventsBetween($start, $until, array $users = [], array $event_types = []) {
+    public function eventsBetween($start, $until, array $users = [], array $event_types = []): Query {
         $query = (new Query())
             ->select(['timestamp', 'user_id', 'event_type', 'event_data'])
             ->from($this->event_table)
@@ -273,9 +273,9 @@ class EventTracker extends Component {
      *
      * @param integer $time       The time at which to get the state as a UNIX timestamp.
      * @param array   $state_keys Optionally filter the query to only contain selected state keys.
-     * @return yii/db/Query The query.
+     * @return Query The query.
      */
-    public function stateAt($time, array $state_keys = []) {
+    public function stateAt($time, array $state_keys = []): Query {
         $query = (new Query())
             ->select(['DISTINCT ON (state_key) state_key', 'state_value'])
             ->from($this->state_table)
@@ -305,18 +305,18 @@ class EventTracker extends Component {
      * Formats a UNIX timestamp so it has the correct number of trailing zeros to be used in a query.
      *
      * @param integer $time The timestamp to be formatted.
-     * @return integer The formatted time.
+     * @return int The formatted time.
      */
-    private function _formatTrackerTime($time) {
+    private function _formatTrackerTime($time): int {
         return (int) $time . '0000';
     }
 
     /**
      * Microtime in the format used by the tracker.
      *
-     * @return integer The microtime precision as integer.
+     * @return int The microtime precision as integer.
      */
-    private function _trackerTime() {
+    private function _trackerTime(): int {
         return (int) round(microtime(true) * 10000);
     }
 

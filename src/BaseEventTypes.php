@@ -3,8 +3,8 @@
 namespace branchonline\eventtracker;
 
 use ReflectionClass;
-use Yii;
 use yii\base\Object;
+use Yii;
 
 /**
  * Provides an abstract class for handling event types.
@@ -17,7 +17,7 @@ use yii\base\Object;
  * @author Roelof Ruis <roelof@branchonline.nl>
  * @copyright Copyright (c) 2016, Branch Online
  * @package branchonline\eventtracker
- * @version 1.1
+ * @version 1.2
  */
 abstract class BaseEventTypes extends Object {
 
@@ -29,7 +29,7 @@ abstract class BaseEventTypes extends Object {
      *
      * @return array The available event types of this object.
      */
-    final public static function types() {
+    final public static function types(): array {
         $cache_available = isset(Yii::$app->cache);
         $types = $cache_available ? Yii::$app->cache->get('tracking.event_types') : false;
         if (false === $types) {

@@ -17,7 +17,7 @@ use yii\base\Object;
  * @author Roelof Ruis <roelof@branchonline.nl>
  * @copyright Copyright (c) 2016, Branch Online
  * @package branchonline\eventtracker
- * @version 1.1
+ * @version 1.2
  */
 abstract class BaseStateKeys extends Object {
 
@@ -29,7 +29,7 @@ abstract class BaseStateKeys extends Object {
      *
      * @return array The available state keys of this object.
      */
-    final public static function keys() {
+    final public static function keys(): array {
         $cache_available = isset(Yii::$app->cache);
         $types = $cache_available ? Yii::$app->cache->get('tracking.state_keys') : false;
         if (false === $types) {

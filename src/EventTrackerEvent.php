@@ -13,7 +13,7 @@ use yii\helpers\Json;
  * @author Roelof Ruis <roelof@branchonline.nl>
  * @copyright Copyright (c) 2016, Branch Online
  * @package branchonline\eventtracker
- * @version 1.1
+ * @version 1.2
  */
 class EventTrackerEvent extends ActiveRecord {
 
@@ -24,7 +24,7 @@ class EventTrackerEvent extends ActiveRecord {
     public static $db;
 
     /** @inheritdoc */
-    public function rules() {
+    public function rules(): array {
         return [
             [['timestamp', 'user_id', 'event_type'], 'required'],
             [['timestamp', 'user_id', 'event_type'], 'integer'],
@@ -35,7 +35,7 @@ class EventTrackerEvent extends ActiveRecord {
     /**
      * Overrides the default table name, so it can be set by the tracker class through late static binding.
      *
-     * @return string The table name.
+     * @return string The table name or null if no table name is available.
      */
     public static function tableName() {
         return static::$table;
@@ -44,7 +44,7 @@ class EventTrackerEvent extends ActiveRecord {
     /**
      * Overrides the default get DB function, so the connection can be set by the tracker through late static binding.
      *
-     * @return Connection The connection to be used.
+     * @return Connection|null The connection to be used or null if no connection is available.
      */
     public static function getDb() {
         return static::$db;

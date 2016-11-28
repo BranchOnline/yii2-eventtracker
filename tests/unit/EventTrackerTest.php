@@ -20,19 +20,12 @@ class EventTrackerTest extends \PHPUnit_Framework_TestCase {
     public function setUp() {
         parent::setUp();
         static $config = [
-            'id' => 'eventtracker-test',
+            'id'       => 'eventtracker-test',
             'basePath' => __DIR__,
         ];
-        $config['components']['db'] = [
-            'class'       => 'yii\db\Connection',
-            'dsn'         => 'pgsql:host=localhost;port=5432;dbname=eventtracker_dev',
-            'username'    => 'homerun_dev',
-            'password'    => 'H0M3run',
-            'tablePrefix' => 'tbl_',
-            'charset'     => 'utf8',
-        ];
+        $config['components']['db']    = include('db.php');
         $config['components']['cache'] = 'yii\caching\DummyCache';
-        $config['vendorPath'] = dirname(dirname(__DIR__)) . '/vendor';
+        $config['vendorPath']          = dirname(dirname(__DIR__)) . '/vendor';
         new \yii\console\Application($config);
     }
 

@@ -135,7 +135,7 @@ class EventTracker extends Component {
      * Log an event. Optionally specify event data and/or a user ID. If you do not specify the user ID, the event will
      * be logged for the currently active user.
      *
-     * @param integer      $event_type The event type specified by its ID. It is recommended to set this use a class
+     * @param integer      $event_type The event type specified by its ID. It is recommended to set this using a class
      * constant from your EventTypes object.
      * @param mixed        $event_data Any event data that should be added and can be encoded into JSON format. Can be
      * NULL in which case no data will be added.

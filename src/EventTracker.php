@@ -135,19 +135,24 @@ class EventTracker extends Component {
      * Log an event. Optionally specify event data and/or a user ID. If you do not specify the user ID, the event will
      * be logged for the currently active user.
      *
-     * @param integer      $event_type The event type specified by its ID. It is recommended to set this using a class
+     * If you have handlers that hook into the logging process, you can explicitly enable/disable these handlers by
+     * using the $run_handlers parameter of this function.
+     *
+     * @param integer      $event_type   The event type specified by its ID. It is recommended to set this using a class
      * constant from your EventTypes object.
-     * @param mixed        $event_data Any event data that should be added and can be encoded into JSON format. Can be
+     * @param mixed        $event_data   Any event data that should be added and can be encoded into JSON format. Can be
      * NULL in which case no data will be added.
-     * @param integer|null $user_id    Optionally specify a user for which to log the event. If NULL the currently
+     * @param integer|null $user_id      Optionally specify a user for which to log the event. If NULL the currently
      * logged in user will be used.
+     * @param boolean      $run_handlers Optionally specify whether or not to run post event handlers (If any are
+     * configured). Defaults to TRUE.
      * @return boolean Whether the event was successfully logged.
      * @throws InvalidParamException Whenever the event data could not be encoded into JSON format or event_type is not
      * a valid event ID.
      * @throws Exception Whenever no user_id is given and there is no authenticated or existing user.
      * @throws IntegrityException Whenever the event could not be inserted into the database.
      */
-    public function logEvent($event_type, $event_data = null, $user_id = null) {
+    public function logEvent($event_type, $event_data = null, $user_id = null, $run_handlers = true) {
         if (null !== $event_data) {
             $event_data = json_encode($event_data);
             if (false === $event_data) {
@@ -176,7 +181,7 @@ class EventTracker extends Component {
         }
 
         if ($event->save()) {
-            if ($this->_post_event_handler instanceof PostEventInterface) {
+            if (true === $run_handlers && $this->_post_event_handler instanceof PostEventInterface) {
                 $this->_post_event_handler->afterLogEvent($event);
             }
             return true;

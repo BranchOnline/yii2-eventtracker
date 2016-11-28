@@ -139,8 +139,14 @@ class EventTrackerTest extends \PHPUnit_Framework_TestCase {
 
     /** @dataProvider providerLogLegalStateKeys */
     public function testTriggerPostEvent($event_type, $event_data, $user_id) {
-        $tracker = $this->_buildFunctioningTrackerWithPostEventHandler();
+        $tracker = $this->_buildFunctioningTrackerWithPostEventHandler($this->once());
         $tracker->logEvent($event_type, $event_data, $user_id);
+    }
+
+    /** @dataProvider providerLogLegalStateKeys */
+    public function testDisableTriggerPostEvent($event_type, $event_data, $user_id) {
+        $tracker = $this->_buildFunctioningTrackerWithPostEventHandler($this->never());
+        $tracker->logEvent($event_type, $event_data, $user_id, false);
     }
 
     public function providerLogLegalTypeEvents() {
@@ -224,9 +230,9 @@ class EventTrackerTest extends \PHPUnit_Framework_TestCase {
         }
     }
 
-    private function _buildFunctioningTrackerWithPostEventHandler() {
+    private function _buildFunctioningTrackerWithPostEventHandler($expects) {
         $injected_handler = $this->getMockBuilder('branchonline\eventtracker\tests\unit\DummyHandler')->getMock();
-        $injected_handler->expects($this->once())
+        $injected_handler->expects($expects)
             ->method('afterLogEvent')
             ->will($this->returnValue(null));
         return new EventTracker([

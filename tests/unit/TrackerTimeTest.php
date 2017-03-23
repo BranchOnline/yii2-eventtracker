@@ -11,8 +11,8 @@ use InvalidArgumentException;
  */
 class TrackerTimeTest extends Unit {
 
-    public function testGetCurrent() {
-        $current_time = TrackerTime::getCurrent();
+    public function testFromCurrentTime() {
+        $current_time = TrackerTime::fromCurrentTime();
         $this->assertTrue($current_time instanceof TrackerTime);
         $this->assertSame(strlen((string) time()) + 4, strlen($current_time->getValue()));
     }
@@ -34,14 +34,15 @@ class TrackerTimeTest extends Unit {
             [false, false],
             [null, false],
             ['ab', false],
-            [0, false],
-            ['0', false],
+            [0, '0'],
+            ['0', '0'],
             ['10', '100000'],
             [10, '100000'],
             [123456789, '1234567890000'],
             ['123456789', '1234567890000'],
         ];
     }
+
 
     /** @dataProvider fromTrackerTimestampProvider */
     public function testFromTrackerTimestamp($value, $expected) {
@@ -52,6 +53,7 @@ class TrackerTimeTest extends Unit {
         } else {
             $time = TrackerTime::fromTrackerTimestamp($value);
             $this->assertSame($expected, $time->getValue());
+            $this->assertSame((int) $expected, $time->getIntValue());
         }
     }
 

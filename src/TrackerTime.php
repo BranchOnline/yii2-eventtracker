@@ -10,6 +10,9 @@ use InvalidArgumentException;
  * Fixes issues with possible int overflow on 32 bit systems and guarantees correct values.
  *
  * @author Roelof Ruis <roelof@branchonline.nl>
+ * @copyright Copyright (c) 2016, Branch Online
+ * @package branchonline\eventtracker
+ * @version 1.2
  */
 final class TrackerTime {
 
@@ -21,7 +24,7 @@ final class TrackerTime {
      *
      * @return TrackerTime
      */
-    public static function getCurrent(): TrackerTime {
+    public static function fromCurrentTime(): TrackerTime {
         $tracker_time = round(microtime(true) * 10000);
         return new TrackerTime($tracker_time);
     }
@@ -33,8 +36,12 @@ final class TrackerTime {
      * @return TrackerTime The tracker time instance.
      */
     public static function fromUnixTimestamp($timestamp): TrackerTime {
-        $tracker_time = ((string) $timestamp) . '0000';
-        return new TrackerTime($tracker_time);
+        if ($timestamp === 0 || $timestamp === '0') {
+            return new TrackerTime('0');
+        } else {
+            $tracker_time = ((string) $timestamp) . '0000';
+            return new TrackerTime($tracker_time);
+        }
     }
 
     /**
@@ -64,7 +71,22 @@ final class TrackerTime {
         $this->_value = $value;
     }
 
-    /** @return string The string timestamp wrapped by this instance. */
+    /**
+     * Returns the timestamp value held by this instance. Returns the int representation so there might be precision
+     * loss for large timestamps on 32 bit systems. Use [[getValue()]] if possible.
+     *
+     * @return int Integer representation of tracker time.
+     */
+    public function getIntValue(): int {
+        return (int) $this->_value;
+    }
+
+    /**
+     * Returns the timestamp value held by this instance. Returns the string representation so there will be no
+     * precision loss.
+     *
+     * @return string The string timestamp wrapped by this instance.
+     */
     public function getValue(): string {
         return $this->_value;
     }
@@ -76,7 +98,11 @@ final class TrackerTime {
      * @return bool Whether the timestamp is valid.
      */
     private function _isTimestampValid(string $value): bool {
-        return (1 === preg_match('/^[1-9][0-9]*$/', $value));
+        if ($value === '0') {
+            return true;
+        } else {
+            return (1 === preg_match('/^[1-9][0-9]*$/', $value));
+        }
     }
 
 }

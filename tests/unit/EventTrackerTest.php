@@ -7,6 +7,7 @@ use branchonline\eventtracker\BaseEventTypes;
 use branchonline\eventtracker\BaseStateKeys;
 use branchonline\eventtracker\EventTrackerEvent;
 use branchonline\eventtracker\PostEventInterface;
+use branchonline\eventtracker\TrackerTime;
 use Codeception\Test\Unit;
 use Yii;
 use yii\db\Connection;
@@ -196,16 +197,33 @@ class EventTrackerTest extends Unit {
         ];
     }
 
-    public function testEventsBetweenReturnsQuery() {
+    public function testEventsBetweenQuery() {
+        $start_unix_time = 123456789;
+        $end_unix_time   = 223456789;
         $tracker = $this->_buildFunctioningTracker();
-        $query   = $tracker->eventsBetween(0, 0, [], []);
+        $query   = $tracker->eventsBetween(TrackerTime::fromUnixTimestamp($start_unix_time), TrackerTime::fromUnixTimestamp($end_unix_time), [], []);
+
         $this->assertInstanceOf('yii\db\Query', $query);
+
+        $expected_query = 'SELECT "timestamp", "user_id", "event_type", "event_data" FROM tracking."tbl_event"'
+            . ' WHERE timestamp BETWEEN ' . $start_unix_time . '0000 AND ' . $end_unix_time . '0000';
+
+        $this->assertEquals($expected_query, $query->createCommand()->getRawSql());
     }
 
-    public function testStateAtReturnsQuery() {
+    public function testStateAtQuery() {
+        $unix_time = 123456789;
+
         $tracker = $this->_buildFunctioningTracker();
-        $query   = $tracker->stateAt(0, []);
+        $query   = $tracker->stateAt(TrackerTime::fromUnixTimestamp($unix_time), []);
         $this->assertInstanceOf('yii\db\Query', $query);
+
+        $expected_query = 'SELECT "keys"."column1" AS "state_key", "state_value" FROM (VALUES (1), (2), (3)) AS keys'
+            . ' LEFT JOIN (SELECT DISTINCT ON (state_key) state_key, "state_value" FROM tracking."tbl_state"'
+            . ' WHERE timestamp <= ' . $unix_time . '0000 ORDER BY "state_key", "timestamp" DESC) "state"'
+            . ' ON state.state_key = keys.column1';
+
+        $this->assertEquals($expected_query, $query->createCommand()->getRawSql());
     }
 
     private function _buildFunctioningTracker($mock_connection = true) {

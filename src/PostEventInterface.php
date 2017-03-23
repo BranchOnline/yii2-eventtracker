@@ -11,13 +11,13 @@ namespace branchonline\eventtracker;
  * @author Roelof Ruis <roelof@branchonline.nl>
  * @copyright Copyright (c) 2016, Branch Online
  * @package branchonline\eventtracker
- * @version 1.2
+ * @version 2.0
  */
 interface PostEventInterface {
 
     /**
      * The after log event is called by the EventTracker after the process of logging an event is completed, and the
-     * EventTrackerEvent instances that was just logged is provided to this function.
+     * EventTrackerEvent instance that was just logged is provided to this function.
      *
      * @param EventTrackerEvent $event The event that was just logged.
      * @return void

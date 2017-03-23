@@ -20,7 +20,7 @@ Installation
 Add
 
 ```json
-"branchonline/yii2-eventtracker": "1.2"
+"branchonline/yii2-eventtracker": "2.0"
 ```
 
 to your composer.json
@@ -75,8 +75,16 @@ Yii::$app->eventtracker->logState(StateKeys::MY_KEY, ['x' => 100]);
 
 ```php
 // Get the events between 1 jan 2016 and 1 feb 2016 for user 1 and 2 of type MY_EVENT_1 or MY_EVENT_2.
-Yii::$app->eventtracker->eventsBetween(1451606400, 1454284800, [1, 2], [EventTypes::MY_EVENT_1, EventTypes::MY_EVENT_2])
+Yii::$app->eventtracker->eventsBetween(
+    TrackerTime::fromUnixTimestamp(1451606400),
+    TrackerTime::fromUnixTimestamp(1454284800),
+    [1, 2],
+    [EventTypes::MY_EVENT_1, EventTypes::MY_EVENT_2]
+);
 
 // Get the state of MY_KEY_1 and MY_KEY_2 at 1 jan 2016.
-Yii::$app->eventtracker->stateAt(1451606400, [StateKeys::MY_KEY_1, StateKeys::MY_KEY_2]);
+Yii::$app->eventtracker->stateAt(
+    TrackerTime::fromUnixTimestamp(1451606400),
+    [StateKeys::MY_KEY_1, StateKeys::MY_KEY_2]
+);
 ```

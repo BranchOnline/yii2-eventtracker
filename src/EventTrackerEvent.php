@@ -13,7 +13,7 @@ use yii\helpers\Json;
  * @author Roelof Ruis <roelof@branchonline.nl>
  * @copyright Copyright (c) 2016, Branch Online
  * @package branchonline\eventtracker
- * @version 1.2
+ * @version 2.0
  */
 class EventTrackerEvent extends ActiveRecord {
 

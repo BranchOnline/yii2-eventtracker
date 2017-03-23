@@ -3,21 +3,20 @@
 namespace branchonline\eventtracker\tests\unit;
 
 use branchonline\eventtracker\EventTrackerEvent;
+use Codeception\Test\Unit;
 use yii\db\Connection;
 
-class EventTrackerEventTest extends \PHPUnit_Framework_TestCase {
+class EventTrackerEventTest extends Unit {
 
     public function testGetDbWorksWithLateStaticBinding() {
         $this->assertSame(null, EventTrackerEvent::getDb());
-        $connection            = new Connection();
-        EventTrackerEvent::$db = $connection;
+        $connection = $this->bindConnection();
         $this->assertSame($connection, EventTrackerEvent::getDb());
     }
 
     public function testGetTableNameWorksWithLateStaticBinding() {
         $this->assertSame(null, EventTrackerEvent::tableName());
-        $table_name               = 'tracking.events_table';
-        EventTrackerEvent::$table = $table_name;
+        $table_name = $this->bindTable();
         $this->assertSame($table_name, EventTrackerEvent::tableName());
     }
 
@@ -28,6 +27,18 @@ class EventTrackerEventTest extends \PHPUnit_Framework_TestCase {
             [['timestamp', 'user_id', 'event_type'], 'integer'],
             ['event_data', 'safe'],
         ], $event->rules());
+    }
+
+    protected function bindConnection() {
+        $connection            = new Connection();
+        EventTrackerEvent::$db = $connection;
+        return $connection;
+    }
+
+    protected function bindTable() {
+        $table_name               = 'tracking.events_table';
+        EventTrackerEvent::$table = $table_name;
+        return $table_name;
     }
 
 }

@@ -3,8 +3,9 @@
 namespace branchonline\eventtracker\tests\unit;
 
 use branchonline\eventtracker\BaseEventTypes;
+use Codeception\Test\Unit;
 
-class BaseEventTypesTest extends \PHPUnit_Framework_TestCase {
+class BaseEventTypesTest extends Unit {
 
     public function testEmptyTypes() {
         $data = MockEmptyEventTypes::types();

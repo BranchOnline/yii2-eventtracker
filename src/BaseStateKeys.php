@@ -17,7 +17,7 @@ use yii\base\Object;
  * @author Roelof Ruis <roelof@branchonline.nl>
  * @copyright Copyright (c) 2016, Branch Online
  * @package branchonline\eventtracker
- * @version 1.2
+ * @version 2.0
  */
 abstract class BaseStateKeys extends Object {
 

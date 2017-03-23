@@ -19,7 +19,7 @@ use yii\di\Instance;
  * @author Roelof Ruis <roelof@branchonline.nl>
  * @copyright Copyright (c) 2016, Branch Online
  * @package branchonline\eventtracker
- * @version 1.2
+ * @version 2.0
  */
 class EventTracker extends Component {
 
@@ -165,7 +165,7 @@ class EventTracker extends Component {
         }
 
         $event = new EventTrackerEvent([
-            'timestamp'  => $this->_trackerTime(),
+            'timestamp'  => TrackerTime::fromCurrentTime()->getIntValue(),
             'event_data' => $event_data,
             'event_type' => $event_type,
         ]);
@@ -219,7 +219,7 @@ class EventTracker extends Component {
         }
 
         $params = [
-            'timestamp'   => $this->_trackerTime(),
+            'timestamp'   => TrackerTime::fromCurrentTime()->getIntValue(),
             'state_key'   => $state_key,
             'state_value' => $state_value,
         ];
@@ -243,13 +243,13 @@ class EventTracker extends Component {
      * Please be aware that you might use each() or batch() on the returned query if you expect the result set to be
      * large.
      *
-     * @param integer $start       The starting integer as a UNIX timestamp.
-     * @param integer $until       The ending integer as a UNIX timestamp.
-     * @param array   $users       Optionally filter the query to only contain events for selected users.
-     * @param array   $event_types Optionally filter the query to only contain selected event types.
+     * @param TrackerTime $start       The starting timestamp.
+     * @param TrackerTime $until       The ending timestamp.
+     * @param array       $users       Optionally filter the query to only contain events for selected users.
+     * @param array       $event_types Optionally filter the query to only contain selected event types.
      * @return Query The query.
      */
-    public function eventsBetween($start, $until, array $users = [], array $event_types = []): Query {
+    public function eventsBetween(TrackerTime $start, TrackerTime $until, array $users = [], array $event_types = []): Query {
         $query = (new Query())
             ->select(['timestamp', 'user_id', 'event_type', 'event_data'])
             ->from($this->event_table)
@@ -258,8 +258,8 @@ class EventTracker extends Component {
             ->andFilterWhere(['in', 'event_type', $event_types]);
 
         $query->addParams([
-            ':low'  => $this->_formatTrackerTime($start),
-            ':high' => $this->_formatTrackerTime($until),
+            ':low'  => $start->getIntValue(),
+            ':high' => $until->getIntValue(),
         ]);
         return $query;
     }
@@ -271,11 +271,11 @@ class EventTracker extends Component {
      *
      * By default the query results are indexed by state key for quicker usage.
      *
-     * @param integer $time       The time at which to get the state as a UNIX timestamp.
-     * @param array   $state_keys Optionally filter the query to only contain selected state keys.
+     * @param TrackerTime $time       The time at which to get the state.
+     * @param array       $state_keys Optionally filter the query to only contain selected state keys.
      * @return Query The query.
      */
-    public function stateAt($time, array $state_keys = []): Query {
+    public function stateAt(TrackerTime $time, array $state_keys = []): Query {
         $query = (new Query())
             ->select(['DISTINCT ON (state_key) state_key', 'state_value'])
             ->from($this->state_table)
@@ -283,7 +283,7 @@ class EventTracker extends Component {
             ->orderBy(['state_key' => SORT_ASC, 'timestamp' => SORT_DESC]);
 
         $query->addParams([
-            ':time' => $this->_formatTrackerTime($time),
+            ':time' => $time->getIntValue(),
         ]);
 
         $available_keys = [];
@@ -299,25 +299,6 @@ class EventTracker extends Component {
             ->andFilterWhere(['in', 'keys.column1', $state_keys])
             ->indexBy('state_key');
         return $outer_query;
-    }
-
-    /**
-     * Formats a UNIX timestamp so it has the correct number of trailing zeros to be used in a query.
-     *
-     * @param integer $time The timestamp to be formatted.
-     * @return int The formatted time.
-     */
-    private function _formatTrackerTime($time): int {
-        return (int) $time . '0000';
-    }
-
-    /**
-     * Microtime in the format used by the tracker.
-     *
-     * @return int The microtime precision as integer.
-     */
-    private function _trackerTime(): int {
-        return (int) round(microtime(true) * 10000);
     }
 
 }

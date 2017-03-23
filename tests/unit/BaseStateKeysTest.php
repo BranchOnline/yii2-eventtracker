@@ -3,8 +3,9 @@
 namespace branchonline\eventtracker\tests\unit;
 
 use branchonline\eventtracker\BaseStateKeys;
+use Codeception\Test\Unit;
 
-class BaseStateKeysTest extends \PHPUnit_Framework_TestCase {
+class BaseStateKeysTest extends Unit {
 
     public function testEmptyKeys() {
         $data = MockEmptyStateKeys::keys();

@@ -7,6 +7,7 @@ use branchonline\eventtracker\BaseEventTypes;
 use branchonline\eventtracker\BaseStateKeys;
 use branchonline\eventtracker\EventTrackerEvent;
 use branchonline\eventtracker\PostEventInterface;
+use Codeception\Test\Unit;
 use Yii;
 use yii\db\Connection;
 
@@ -15,7 +16,7 @@ use yii\db\Connection;
  *
  * @author Roelof Ruis <roelof@branchonline.nl>
  */
-class EventTrackerTest extends \PHPUnit_Framework_TestCase {
+class EventTrackerTest extends Unit {
 
     public function setUp() {
         parent::setUp();

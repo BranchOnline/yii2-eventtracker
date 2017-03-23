@@ -3,9 +3,10 @@
 namespace branchonline\eventtracker\tests\unit;
 
 use branchonline\eventtracker\EventTrackerEvent;
+use Codeception\Test\Unit;
 use yii\db\Connection;
 
-class EventTrackerEventTest extends \PHPUnit_Framework_TestCase {
+class EventTrackerEventTest extends Unit {
 
     public function testGetDbWorksWithLateStaticBinding() {
         $this->assertSame(null, EventTrackerEvent::getDb());

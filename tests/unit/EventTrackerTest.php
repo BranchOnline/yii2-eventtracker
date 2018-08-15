@@ -136,7 +136,7 @@ class EventTrackerTest extends Unit {
             'user_id' => $user_id
         ]);
         $this->assertTrue($logged_event instanceof EventTrackerEvent);
-        $this->assertSame($event_data, json_decode($logged_event->event_data, true));
+        $this->assertSame($event_data, $logged_event->event_data);
     }
 
     /** @dataProvider providerLogLegalStateKeys */

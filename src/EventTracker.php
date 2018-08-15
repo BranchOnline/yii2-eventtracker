@@ -154,8 +154,8 @@ class EventTracker extends Component {
      */
     public function logEvent($event_type, $event_data = null, $user_id = null, bool $run_handlers = true): bool {
         if (null !== $event_data) {
-            $event_data = json_encode($event_data);
-            if (false === $event_data) {
+            json_encode($event_data);
+            if (json_last_error() !== JSON_ERROR_NONE) {
                 throw new InvalidParamException('The event data could not be encoded into JSON format.');
             }
         }

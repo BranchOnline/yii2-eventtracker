@@ -77,7 +77,7 @@ class EventTracker extends Component {
      * @var PostEventInterface|null Internally holds the post event handler instance, or null if no extra handling
      * is required.
      */
-    private $_post_event_handler;
+    private $_post_event_handlers;
 
     /**
      * Initializes a new event tracker object.
@@ -101,11 +101,17 @@ class EventTracker extends Component {
         $this->_event_types = $event_types_instance;
         $this->db = Instance::ensure($this->db, Connection::className());
         if (null !== $this->post_event_handler){
-            $handler = Yii::createObject($this->post_event_handler);
-            if (!$handler instanceof PostEventInterface) {
-                throw new InvalidConfigException('$post_event_handler should indicate a class implementing the PostEventInterface.');
+            $post_event_handlers = is_string($this->post_event_handler) ? [$this->post_event_handler] : $this->post_event_handler;
+
+            foreach ($post_event_handlers as $post_event_handler) {
+                $handler = Yii::createObject($post_event_handler);
+                if (!$handler instanceof PostEventInterface) {
+                    throw new InvalidConfigException('$post_event_handler should indicate a class implementing the PostEventInterface.');
+                }
+
+                $this->_post_event_handlers[] = $handler;
             }
-            $this->_post_event_handler = $handler;
+
         }
         EventTrackerEvent::$db    = $this->db;
         EventTrackerEvent::$table = $this->event_table;
@@ -181,8 +187,10 @@ class EventTracker extends Component {
         }
 
         if ($event->save()) {
-            if (true === $run_handlers && $this->_post_event_handler instanceof PostEventInterface) {
-                $this->_post_event_handler->afterLogEvent($event);
+            if (true === $run_handlers) {
+                foreach ($this->_post_event_handlers as $post_event_handler) {
+                    $post_event_handler->afterLogEvent($event);
+                }
             }
             return true;
         } else {
